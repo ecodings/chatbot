@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<title>챗봇 닥터 수련</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 연수 게임 — 픽셀 수학 탐험대와 같은 집안, 차분한 남색과 따뜻한 주황
+   IDEA: 챗봇 종합병원 수련 과정 — 차트, 검사 결과지, 면허증
+   PICTURE: 환자 로봇 얼굴, 검사 타일, 재검사 전후, 면허증
+   COLOUR and TYPE: 모눈 배경 #eef2f8, 남색 #1e2b4a, 주황 CTA #e2793b, 라이트 고정
+   LAYOUT: 앱 아이콘 헤더 + 한 줄 진행 막대, 둥근 큰 카드, 아래 원형 이전 + 알약 다음 */
+:root{color-scheme:light;--bg:#eef2f8;--card:#fff;--ink:#1e2b4a;--mut:#6b7891;--ln:#dfe5ef;--a:#2b3a67;--a2:#e8edf7;--a3:#cfd9ee;--c:#e2793b;--c2:#fdeee3;--o:#d9534f;--o2:#fdecec;--g:#2e9e6b;--g2:#e6f5ee;--y:#d9932a;--y2:#fff5e6}
+*{box-sizing:border-box;min-width:0}
+html{background:var(--bg)}
+body{margin:0;color:var(--ink);font:15px/1.55 "Pretendard Variable",Pretendard,"Noto Sans KR",system-ui,sans-serif;overflow-x:clip;background:var(--bg) linear-gradient(#e2e8f2 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,#e2e8f2 1px,transparent 1px) 0 0/32px 32px;background-image:linear-gradient(#e2e8f2 1px,transparent 1px),linear-gradient(90deg,#e2e8f2 1px,transparent 1px);background-size:32px 32px;min-height:100vh}
+.top{position:sticky;top:0;z-index:5;background:rgba(238,242,248,.92);backdrop-filter:blur(8px);padding:12px 16px 10px}
+.tr1{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:760px;margin:auto}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:40px;height:40px;border-radius:12px;background:var(--a);display:grid;place-items:center;flex:none;box-shadow:0 3px 8px rgba(43,58,103,.25)}
+.top h1{margin:0;font-size:18px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
+.meta{text-align:right;line-height:1.3}.meta #stl{font-size:13px;font-weight:700;color:#4a5878}.pts{font-size:13px;color:var(--mut);white-space:nowrap}.pts b{color:var(--c);font-size:16px;font-variant-numeric:tabular-nums}
+.prog{max-width:760px;margin:10px auto 0;height:8px;border-radius:99px;background:#dde4ef;overflow:hidden}.prog i{display:block;height:100%;background:var(--a);border-radius:99px;transition:width .4s}
+main{max-width:760px;margin:auto;padding:8px 14px 110px}
+.card{background:var(--card);border-radius:22px;padding:18px 18px;margin-bottom:12px;box-shadow:0 6px 24px rgba(30,43,74,.07),0 1px 2px rgba(30,43,74,.05)}
+h2{font-size:22px;line-height:1.3;margin:6px 0 6px;letter-spacing:-.02em}
+h3{font-size:16px;margin:0 0 8px;letter-spacing:-.01em}
+.lv{display:inline-block;font-size:13px;font-weight:700;color:#3b4a75;background:var(--a2);padding:4px 12px;border-radius:999px}
+.lead{color:var(--mut);margin:0 0 12px;font-size:14px}
+label.f{display:block;font-size:13px;color:#4a5878;margin:12px 0 6px;font-weight:700}
+input,textarea,select{font:inherit;font-size:16px;width:100%;padding:11px 14px;border:1.5px solid var(--ln);border-radius:14px;background:#fff;color:var(--ink)}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--a)}button:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+.pick{display:flex;flex-wrap:wrap;gap:7px}
+button{font:inherit;font-size:16px;font-weight:800;min-height:48px;padding:0 20px;border-radius:999px;border:0;background:var(--c);color:#fff;cursor:pointer;box-shadow:0 4px 12px rgba(226,121,59,.28)}
+button.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--ln);box-shadow:none}
+button.opt{min-height:38px;padding:0 14px;font-size:14px;font-weight:700;background:#fff;color:#4a5878;border:1.5px solid var(--ln);box-shadow:none}
+button.opt[aria-pressed=true]{background:var(--a);border-color:var(--a);color:#fff}
+button.opt[aria-pressed=true]::before{content:"✓ "}
+button:disabled{opacity:.4;cursor:default;box-shadow:none}
+.choice{display:grid;gap:8px}
+.choice button{text-align:left;background:#fff;color:var(--ink);border:1.5px solid var(--ln);box-shadow:none;font-weight:700;min-height:50px;line-height:1.35;padding:10px 16px;border-radius:16px}
+.choice button:disabled{opacity:.55}.choice button.ok:disabled,.choice button.no:disabled{opacity:1}.choice button.ok{background:var(--g2);border-color:var(--g);color:#1e7a52}
+.choice button.no{background:var(--o2);border-color:var(--o);color:#b23b37}
+.kwr{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--ln)}.kwr:first-of-type{border-top:0}.kwr b{width:4.6em;flex:none;font-size:14px}
+.big{font-size:48px;line-height:1;font-weight:800;color:var(--a);font-variant-numeric:tabular-nums}.big small{font-size:15px;color:var(--mut);font-weight:700}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px}
+@media(min-width:640px){.tiles.t5{grid-template-columns:repeat(5,minmax(0,1fr))}.tiles.t4{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tile{min-height:0;padding:9px 10px;border-radius:14px;border:1.5px solid var(--ln);background:#fff;color:var(--ink);font-weight:600;font-size:13px;text-align:left;display:flex;gap:7px;align-items:flex-start;line-height:1.35;box-shadow:none}
+.tile .m{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff;background:var(--g);margin-top:1px}
+.tile.x{border-color:#f1c0be;background:var(--o2)}.tile.x .m{background:var(--o)}
+.tile[aria-pressed=true]{border-color:var(--a);box-shadow:0 0 0 2px var(--a3)}
+.tile .qq{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.det{margin-top:10px;padding:12px 14px;border-radius:14px;background:#f5f7fb;font-size:13px;border:1px dashed var(--a3)}
+.det .row2{margin:3px 0}.det .k{color:var(--mut);display:inline-block;width:4.5em;font-weight:600}
+.bad{color:var(--o);font-weight:800}.good{color:var(--g);font-weight:800}
+.tok{display:inline-block;padding:1px 8px;margin:1px 3px 1px 0;border-radius:999px;background:var(--a2);color:var(--a);font-weight:700;font-size:12px}
+.tok.u{background:var(--o2);color:var(--o);text-decoration:line-through}.tok.m{background:var(--a3);color:var(--ink)}.tok.s{background:#eceef2;color:#9aa1ad;text-decoration:line-through}
+.cc{background:var(--y2);border-radius:14px;padding:11px 14px;font-weight:700;color:#7a4f0f;margin:10px 0 0;font-size:14px}
+.stage{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;font-size:12px}.stage span{padding:3px 11px;border-radius:999px;background:#f1f4f9;color:var(--mut);font-weight:700}.stage span.on{background:var(--a);color:#fff}.stage span.done{background:var(--a2);color:#3b4a75}
+.pt{display:flex;gap:14px;align-items:center;margin-top:8px}.pt h2{margin:0}
+.timer{height:6px;border-radius:99px;background:#e6ebf3;overflow:hidden;margin:6px 0 10px}.timer i{display:block;height:100%;background:var(--a);border-radius:99px;transition:width 1s linear}.timer.over i{background:#b5bcc8}
+.fb{margin-top:10px;padding:12px 14px;border-radius:14px;font-size:14px}.fb.ok{background:var(--g2);color:#17603f}.fb.no{background:var(--o2);color:#8f2d2a}
+.fb b{display:block;margin-bottom:2px}
+.out{display:inline-block;padding:2px 11px;border-radius:999px;font-weight:800;font-size:13px}.out.cure{background:var(--g2);color:var(--g)}.out.better{background:var(--a2);color:var(--a)}.out.side{background:var(--o2);color:var(--o)}.out.none{background:#eceef2;color:#5a6170}.out.refer{background:var(--y2);color:var(--y)}
+.lic{border-radius:24px;padding:22px;background:#fff;position:relative;box-shadow:0 10px 30px rgba(30,43,74,.12);border-top:10px solid var(--a)}
+.lic .seal{position:absolute;right:18px;top:24px;width:70px;height:70px;border-radius:50%;border:2.5px solid var(--c);color:var(--c);display:grid;place-items:center;font-weight:800;font-size:13px;transform:rotate(-12deg);text-align:center;line-height:1.15}
+.lic h2{font-size:22px;color:var(--c)}.lic .nm{font-size:30px;font-weight:800;margin:10px 0 0;letter-spacing:-.02em}
+table{border-collapse:collapse;width:100%;font-size:14px;margin-top:10px}td,th{border-bottom:1px solid var(--ln);padding:8px 4px;text-align:left}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}td:first-child,th:first-child{white-space:nowrap;padding-right:10px}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:12px 14px calc(14px + env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;background:linear-gradient(to top,rgba(238,242,248,1) 60%,rgba(238,242,248,0))}
+.bar button{flex:1;max-width:420px;min-height:54px;font-size:17px}
+.bar button.circ{flex:none;width:54px;padding:0;font-size:22px;border-radius:50%;background:#fff;color:var(--ink);border:1.5px solid var(--ln);box-shadow:0 2px 6px rgba(30,43,74,.06)}
+.note{font-size:12px;color:var(--mut);margin:6px 0 0}
+.chat{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;padding:10px;margin:8px 0;background:#f5f7fb;border-radius:14px}
+.me,.bt{max-width:86%;padding:8px 12px;border-radius:16px;font-size:14px}.me{align-self:flex-end;background:var(--a);color:#fff;border-bottom-right-radius:4px}.bt{align-self:flex-start;background:#fff;border:1px solid var(--ln);border-bottom-left-radius:4px}
+form.row{display:flex;gap:8px}form.row button{white-space:nowrap;min-height:46px}
+.toast{position:fixed;left:50%;top:84px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 18px;border-radius:999px;font-size:14px;font-weight:800;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}.toast.on{opacity:1}
+@media(prefers-reduced-motion:no-preference){.pop{animation:pop .4s}@keyframes pop{0%{transform:scale(.8);opacity:.4}100%{transform:scale(1);opacity:1}}}
+.dq{font-weight:800;font-size:14px;margin-bottom:6px}
+.st{display:flex;gap:8px;margin:7px 0;line-height:1.5}.st b{font-weight:800}.st>div>div{margin-top:2px}
+.sn{flex:none;width:20px;height:20px;border-radius:50%;background:var(--a2);color:var(--a);font-size:11px;font-weight:800;display:grid;place-items:center;margin-top:1px}
+.sb{display:grid;grid-template-columns:minmax(0,10em) minmax(0,1fr) 3em;gap:8px;align-items:center;margin-top:4px;font-size:12px}.sb small{color:var(--mut)}.sb span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb i{height:8px;background:#e3e8f1;border-radius:99px;overflow:hidden;display:block}.sb em{display:block;height:100%;background:var(--a3);border-radius:99px}.sb span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.tok.dim{background:#f1f3f7;color:#a3aab6;font-weight:500}.dr{margin-top:6px;padding:8px 10px;background:#fff;border-radius:10px;border:1px solid var(--ln)}.dr small{color:var(--mut)}.dr>div{margin-top:3px}
+details.data{margin-top:10px;background:#f5f7fb;border-radius:14px;padding:10px 14px}details.data summary{cursor:pointer;font-weight:800;font-size:14px;color:var(--a);min-height:28px}.dd{padding:7px 0;border-top:1px solid var(--ln);font-size:14px}.dd:first-of-type{border-top:0}.dd small{color:var(--mut)}
+.why0{font-size:13px;color:#4a5878;background:#fff;border-radius:10px;padding:8px 10px;margin:0 0 6px;border:1px solid var(--ln)}
+.choice button.sel{border-color:var(--a);background:var(--a2);box-shadow:0 0 0 2px var(--a3)}.choice button.sel::before{content:'● ';color:var(--a)}
+</style>
+</head>
+<body>
+<div class="top"><div class="tr1"><div class="brand"><span class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M12 8v5M9.5 10.5h5" stroke="#f6b27f"/></svg></span><h1 id="ttl">챗봇 닥터 수련</h1></div><div class="meta"><div id="stl"></div><div class="pts" id="pts"></div></div></div><div class="prog"><i id="pg" style="width:0"></i></div></div>
+<main id="main"></main>
+<div class="bar" id="bar"></div>
+<div class="toast" id="toast"></div>
+<script>
+{
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* ===== 챗봇 엔진 ===== */
+const STRIP=['하면','해요','했어요','했어','하나요','할까','돼요','에서는','에서','에게','한테','까지','부터','으로','이랑','이에요','예요','인가요','나요','이야','야','요','은','는','을','를','이','가','도','로','에','의'];
+function tokenize(s){return s.replace(/[?!.,~"“”'‘’()]/g,' ').split(/\s+/).filter(Boolean).map(w=>{for(const j of STRIP)if(w.length>j.length&&w.endsWith(j))return w.slice(0,-j.length);return w})}
+function clone(o){return JSON.parse(JSON.stringify(o))}
+/* bot: {mode:'rule'|'count'|'tf'|'tfidf', docs:[{id,t,tx,w:[..]}], rules:{id:[kw]}, syn:{a:b}, stop:[], thr:0} */
+function respond(bot,q){
+  const raw=q.q,tk0=q.tk||tokenize(raw),trace={tk:tk0,steps:[]};
+  if(bot.mode==='rule'){
+    for(const d of bot.docs)for(const k of(bot.rules[d.id]||[]))if(raw.includes(k)){trace.rule=`“${k}”가 있으면 → ${d.t}`;trace.rk=k;return{id:d.id,trace}}
+    trace.rule='맞는 규칙 없음';return{id:null,trace}}
+  const docs=bot.docs.map(d=>({id:d.id,w:d.w.filter(x=>!bot.stop.includes(x))})),V=new Set(docs.flatMap(d=>d.w)),N=docs.length,df={};
+  V.forEach(w=>df[w]=docs.filter(d=>d.w.includes(w)).length);const idf=w=>Math.log2(N/df[w]);
+  const tk=[];trace.map=[];
+  tk0.forEach(w=>{if(bot.stop.includes(w)){trace.map.push([w,'s']);return}let x=w;if(!V.has(x)&&bot.syn[x]){trace.map.push([w,'m',bot.syn[x]]);x=bot.syn[x]}else trace.map.push([w,V.has(w)?'k':'u']);if(V.has(x))tk.push(x)});
+  const uq=[...new Set(tk)];
+  let sc;
+  if(bot.mode==='count')sc=docs.map(d=>({id:d.id,s:uq.reduce((a,w)=>a+d.w.filter(y=>y===w).length,0),L:d.w.length}));
+  else if(bot.mode==='tf')sc=docs.map(d=>({id:d.id,s:uq.reduce((a,w)=>a+d.w.filter(y=>y===w).length/d.w.length,0),L:d.w.length}));
+  else{const qv={};tk.forEach(w=>qv[w]=(qv[w]||0)+1/tk.length);
+    sc=docs.map(d=>{let dot=0,a=0,b=0;V.forEach(w=>{const x=(qv[w]||0)*idf(w),y=d.w.filter(z=>z===w).length/d.w.length*idf(w);dot+=x*y;a+=x*x;b+=y*y});return{id:d.id,s:a&&b?dot/Math.sqrt(a*b):0,L:d.w.length}})}
+  trace.idf=Object.fromEntries(uq.map(w=>[w,idf(w)]));
+  trace.sc=[...sc].sort((a,b)=>b.s-a.s);const top=trace.sc[0];
+  const thr=bot.mode==='tfidf'?bot.thr:0;
+  return{id:top&&top.s>0&&top.s>=thr?top.id:null,trace}}
+function exam(bot,tests){return tests.map(t=>{const r=respond(bot,t);return{...t,got:r.id,ok:r.id===t.exp,trace:r.trace}})}
+/* 처방 적용 */
+function applyRx(bot,rx){const b=clone(bot);
+  if(rx.tool==='search'){b.mode='tfidf'}
+  else if(rx.tool==='len'){if(b.mode==='count')b.mode='tf'}
+  else if(rx.tool==='idf'){if(b.mode==='tf'||b.mode==='count')b.mode='tfidf'}
+  else if(rx.tool==='stop'){b.stop=[...b.stop,...rx.words]}
+  else if(rx.tool==='syn'){rx.pairs.forEach(([a,c])=>b.syn[a]=c)}
+  else if(rx.tool==='ex'){const d=b.docs.find(x=>x.id===rx.doc);if(d)d.w=[...d.w,...(rx.tk||tokenize(rx.text))]}
+  else if(rx.tool==='thr'){b.thr=rx.v}
+  else if(rx.tool==='rule'){(b.rules[rx.doc]=b.rules[rx.doc]||[]).push(rx.word)}
+  return b}
+function outcome(before,after){const pb=before.filter(x=>x.ok).length,pa=after.filter(x=>x.ok).length,broke=after.some((x,i)=>before[i].ok&&!x.ok);
+  if(broke)return'side';if(pa===after.length)return'cure';if(pa>pb)return'better';return'none'}
+/* ===== 환자 데이터 ===== */
+const D=(id,t,tx,w)=>({id,t,tx,w:w.split(' ')});
+const DX={norule:'이 질문에 맞는 규칙이 아예 없다',rule:'키워드가 들어 있기만 하면 그 답을 한다',len:'답변 문장이 길수록 점수를 더 받는다',common:'어디에나 있는 흔한 말이 점수를 가져간다',unk:'처음 보는 단어를 그냥 무시한다',order:'단어 순서가 바뀌어도 구별하지 못한다',ctx:'같은 단어의 다른 뜻을 구별하지 못한다',halluc:'모르는 질문에도 아무 답이나 한다'};
+const TOOLS={search:'검색형(TF-IDF)으로 전환',rule:'규칙 추가',len:'길이로 나누기 (TF)',idf:'IDF 적용',stop:'불용어 지정',syn:'비슷한 말 연결',ex:'예시 질문 추가',thr:'기준선 설정',refer:'전문의 의뢰 (불치)'};
+const EASY=[
+{id:'e1',name:'빈칸봇',age:'1단계 규칙형',cc:'도서관을 물으면 늘 “잘 모르겠어요”라고 해요.',
+ bot:{mode:'rule',rules:{meal:['급식'],nurse:['보건실']},syn:{},stop:[],thr:0,docs:[
+  D('meal','급식','급식 메뉴는 홈페이지 식단표에 있어요.','급식 메뉴 홈페이지 식단표'),
+  D('lib','도서관','도서관은 본관 3층이고 오후 5시까지 열어요.','도서관 본관 3층 오후 5시'),
+  D('nurse','보건실','보건실은 1층이에요.','보건실 1층')]},
+ tests:[{q:'도서관 몇 시까지 해?',tk:['도서관','몇','시'],exp:'lib'},{q:'급식 뭐야?',tk:['급식','뭐'],exp:'meal'},{q:'도서관 위치 알려 줘',tk:['도서관','위치','알려'],exp:'lib'},{q:'보건실 어디야?',tk:['보건실','어디'],exp:'nurse'}],
+ dx:'norule',dxOpt:['norule','len','ctx','order'],
+ sa:{q:'챗봇이 대답하지 못한 두 질문에 공통으로 들어 있는 단어는?',a:['도서관']},
+ curable:true,cure:'rule',why:{c:['도서관에 대한 규칙이 없어서','답변이 너무 길어서','문맥을 몰라서'],e:['도서관 질문에도 답하도록','길이로 나눠 비교하도록','주변 단어를 보도록']},
+ dxWhy:'규칙 목록에 도서관 키워드가 없어요. 규칙형은 적어 둔 키워드가 없으면 대답할 수 없어요.',
+ h:{dx:'✗ 칸의 결과지 ①의 규칙 목록과, 질문 속 단어를 비교해 보세요.',rx:'1부 Lv1에서 챗봇에게 무엇을 직접 정해 줬는지 떠올려 보세요.'},
+ rx2:'규칙 추가를 고르고 → ‘도서관’ 답변에 키워드 ‘도서관’',
+ lesson:'규칙형은 적어 둔 규칙만큼만 알아요. 규칙을 하나 더하면 고쳐지지만, 새 질문이 올 때마다 규칙을 계속 써야 해요.'},
+{id:'e2',name:'점심봇',age:'2단계 검색형 (TF-IDF)',cc:'“점심”이라고 물으면 도서관 안내를 해요.',
+ bot:{mode:'tfidf',rules:{},syn:{},stop:[],thr:0,docs:[
+  D('meal','급식','급식 메뉴는 홈페이지 식단표에 있어요.','급식 메뉴 홈페이지 식단표'),
+  D('lib','도서관','도서관은 본관 3층이고 오늘 오후까지 열어요.','도서관 본관 3층 오늘 오후'),
+  D('time','시간표','시간표는 학급 게시판에 있어요.','시간표 학급 게시판')]},
+ tests:[{q:'오늘 점심 뭐야?',tk:['오늘','점심','뭐'],exp:'meal'},{q:'급식 메뉴 알려 줘',tk:['급식','메뉴','알려'],exp:'meal'},{q:'도서관 몇 층이야?',tk:['도서관','몇','층'],exp:'lib'}],
+ dx:'unk',dxOpt:['unk','order','halluc','rule'],
+ sa:{q:'주황색으로 지워진 단어 중 질문의 뜻을 담은 단어는?',a:['점심']},
+ curable:true,cure:'syn',why:{c:['처음 보는 단어 ‘점심’이 계산에서 빠져서','흔한 단어가 점수를 가져가서','말 많은 문서가 유리해서'],e:['‘점심’을 ‘급식’과 이어 주도록','흔한 단어의 무게를 줄이도록','규칙을 추가하도록']},
+ dxWhy:'‘점심’은 어느 답변에도 없는 단어라 계산에서 빠졌어요. 남은 ‘오늘’ 때문에 도서관 답변이 골라졌어요.',
+ h:{dx:'✗ 칸의 결과지 ②를 보세요. 챗봇이 질문의 단어를 전부 읽었나요?',rx:'1부 Lv3에서 챗봇이 처음 보는 단어를 어떻게 읽었는지 떠올려 보세요.'},
+ rx2:'비슷한 말 연결을 고르고 → ‘점심’을 ‘급식’으로',
+ lesson:'처음 보는 단어는 계산에서 빠지고, 남은 ‘오늘’ 때문에 엉뚱한 문서가 골라졌어요. 비슷한 말을 이어 주는 것이 단어 벡터의 출발점이에요.'}];
+const PATIENTS0=[
+{id:'p1',name:'규칙봇',age:'1단계 규칙형',cc:'“급식실 어디야?”라고 물었더니 오늘 메뉴를 알려 줘요.',
+ bot:{mode:'rule',rules:{menu:['급식'],place:['위치','어디'],nurse:['보건실']},syn:{},stop:[],thr:0,docs:[
+  D('menu','급식 메뉴','오늘 급식 메뉴는 홈페이지 식단표에 있어요.','오늘 급식 메뉴 홈페이지 식단표'),
+  D('place','교실 위치','급식실 · 과학실 · 음악실 위치는 1층 안내도를 보세요.','급식실 과학실 음악실 위치 1층 안내도'),
+  D('nurse','보건실','몸이 아프면 1층 보건실로 가세요.','몸 아프 1층 보건실')]},
+ tests:[{q:'급식실 어디야?',tk:['급식실','어디'],exp:'place'},{q:'오늘 급식 메뉴 뭐야?',tk:['오늘','급식','메뉴','뭐'],exp:'menu'},{q:'과학실 위치 알려 줘',tk:['과학실','위치','알려'],exp:'place'},{q:'보건실 어디야?',tk:['보건실','어디'],exp:'nurse'}],
+ dx:'rule',dxOpt:['rule','unk','len','ctx'],
+ sa:{q:'“급식실 어디야?”에서 규칙형이 걸려 넘어진 키워드는?',a:['급식']},
+ curable:true,cure:'search',kw:['단어','포함','뜻','검색','벡터'],
+ why:{c:['‘급식실’ 안에 ‘급식’이 들어 있어서','처음 보는 단어라서','답변이 너무 길어서'],e:['문장 전체를 벡터로 비교하도록','규칙을 더 많이 쓰도록','길이로 나눠 비교하도록']},
+ h:{dx:'“급식실”이라는 글자 안에 무엇이 들어 있나요?',sa:'결과지의 ‘규칙’ 줄을 보세요.',rx:'규칙을 고쳐도 또 다른 예외가 생겨요. 1부 Lv2에서 규칙을 버리고 무엇으로 바꿨나요?'},
+ lesson:'“급식실”에도 “급식”이 들어 있어서 메뉴 규칙에 먼저 걸렸어요. 규칙을 더해도 순서와 예외가 끝없이 늘어나요. 문장 전체를 벡터로 비교하는 검색형으로 바꿔야 해요.'},
+{id:'p2',name:'세기봇',age:'2단계 검색형 (세기만)',cc:'급식을 물었는데 자꾸 시간표 안내를 보여 줘요.',
+ bot:{mode:'count',rules:{},syn:{},stop:[],thr:0,docs:[
+  D('meal','급식 안내','급식 메뉴는 급식 게시판에서 확인해요.','급식 메뉴 급식 게시판 확인 해요'),
+  D('time','시간표 안내','오늘 시간표는 오늘 아침 홈페이지에서 확인해요. 바뀐 시간표도 확인해요.','오늘 시간표 오늘 아침 홈페이지 확인 해요 바뀐 시간표 확인 해요'),
+  D('lib','도서관 안내','도서관은 오늘 오후까지 운영해요.','도서관 오늘 오후 운영 해요'),
+  D('after','방과후 안내','방과후 신청은 홈페이지에서 확인해요.','방과후 신청 홈페이지 확인 해요')]},
+ tests:[{q:'오늘 급식 어디서 확인해요?',tk:['오늘','급식','어디서','확인','해요'],exp:'meal'},{q:'바뀐 시간표 알려 줘',tk:['바뀐','시간표','알려'],exp:'time'},{q:'도서관 몇 시까지 운영해요?',tk:['도서관','몇','시','운영','해요'],exp:'lib'}],
+ dx:'len',dxOpt:['len','halluc','unk','rule'],
+ sa:{q:'1등을 차지한 시간표 안내는 단어가 모두 몇 개인가요? (숫자)',a:['11','11개']},
+ curable:true,cure:'len',kw:['길이','나누','비율','TF','공정'],
+ why:{c:['말 많은 문서가 유리해서','흔한 단어가 점수를 가져가서','처음 보는 단어라서'],e:['문서 길이로 나눠 공정하게 비교하도록','비슷한 말을 연결하도록','모르면 모른다고 하도록']},
+ dxWhy:'시간표 안내 답변은 단어가 11개나 되는 긴 문장이라, 질문 단어 ‘오늘·확인·해요’가 두 번씩 들어 있어요. 횟수만 세면 긴 답변이 이겨요.',
+ h:{dx:'✗ 칸의 결과지 ③에서 두 답변을 나눈 단어를 비교해 보세요. 어느 쪽이 더 길고, 겹친 단어가 몇 번씩 들어 있나요?',rx:'답변마다 길이가 달라요. 반 인원이 다를 때 상대도수로 비교하듯, 공정하게 비교하려면?'},
+ rx2:'길이로 나누기 (TF) — 답변 길이로 나눠 비교',
+ lesson:'단어를 세기만 하면 말이 많은 문서가 유리해요. 문서 길이로 나누면(TF) 공정하게 비교돼요. 상대도수와 같은 생각이에요.'},
+{id:'p3',name:'해요봇',age:'2단계 검색형 (TF만)',cc:'“급식 확인해요”라고 하면 방과후 신청을 안내해요.',
+ bot:{mode:'tf',rules:{},syn:{},stop:[],thr:0,docs:[
+  D('meal','급식 안내','급식 메뉴와 사진은 홈페이지 식단표 게시판에서 확인해요.','급식 메뉴 홈페이지 식단표 게시판 사진 확인 해요'),
+  D('after','방과후 안내','방과후는 앱에서 해요.','방과후 해요'),
+  D('nurse','보건실 안내','보건실은 1층 현관 옆에 있어요 해요.','보건실 1층 현관 해요')]},
+ tests:[{q:'급식 확인해요',tk:['급식','확인','해요'],exp:'meal'},{q:'방과후 신청해요',tk:['방과후','신청','해요'],exp:'after'},{q:'급식 메뉴 해요?',tk:['급식','메뉴','해요'],exp:'meal'}],
+ dx:'common',dxOpt:['common','rule','unk','order'],
+ sa:{q:'모든 문서에 들어 있어서 IDF가 0이 되는 단어는?',a:['해요']},
+ curable:true,cure:'idf',kw:['흔한','모든 문서','IDF','드문','무게','정보'],
+ why:{c:['모든 문서에 있는 흔한 단어가 점수를 가져가서','말 많은 문서가 유리해서','단어 순서를 몰라서'],e:['흔한 단어의 무게를 0에 가깝게 하도록','길이로 나눠 비교하도록','규칙을 추가하도록']},
+ dxWhy:'방과후 안내는 ‘해요’ 하나로 이겼어요. ‘해요’는 모든 답변에 있는 흔한 말인데도 점수를 받았어요.',
+ h:{dx:'✗ 칸의 결과지 ③ ‘겹친 단어’를 보세요. 1등 답변은 어떤 단어 덕분에 이겼나요?',rx:'어느 답변에나 있는 단어는 답변을 구별해 주지 못해요. 그런 단어의 무게를 줄이는 도구는?'},
+ rx2:'IDF 적용 — 흔한 단어 ‘해요’의 무게가 0이 돼요',
+ lesson:'“해요”는 모든 문서에 있어서 아무것도 알려 주지 않아요. IDF를 곱하면 log 1 = 0이 되어 저절로 사라져요. 불용어로 빼도 같은 효과예요.'},
+{id:'p4',name:'밥몰라봇',age:'2단계 검색형 (TF-IDF)',cc:'“밥”이나 “양호실”이라고 하면 엉뚱한 답을 해요.',
+ bot:{mode:'tfidf',rules:{},syn:{},stop:[],thr:0,docs:[
+  D('meal','급식','급식 메뉴는 홈페이지 식단표에 있어요.','급식 메뉴 홈페이지 식단표'),
+  D('nurse','보건실','몸이 안 좋으면 1층 보건실로 가세요.','몸 안좋 1층 보건실'),
+  D('lib','도서관','도서관은 본관 3층에 있고 오늘 오후까지 열어요.','도서관 본관 3층 오늘 오후'),
+  D('time','시간표','시간표는 학급 게시판에 올라와요.','시간표 학급 게시판')]},
+ tests:[{q:'오늘 밥 뭐 나와?',tk:['오늘','밥','뭐','나오'],exp:'meal'},{q:'양호실 어디예요?',tk:['양호실','어디'],exp:'nurse'},{q:'급식 메뉴 알려 줘',tk:['급식','메뉴','알려'],exp:'meal'},{q:'도서관 몇 층이야?',tk:['도서관','몇','층'],exp:'lib'}],
+ dx:'unk',dxOpt:['unk','common','ctx','rule'],
+ sa:{q:'사전에 없어서 무시된 단어 하나를 쓰세요.',a:['밥','양호실','뭐','나오','어디']},
+ curable:true,cure:'syn',kw:['비슷','같은 뜻','동의어','벡터','가까'],
+ why:{c:['사전에 없는 단어라서 계산에서 빠져서','흔한 단어가 점수를 가져가서','문맥을 몰라서'],e:['처음 보는 말을 아는 말로 이어 주도록','흔한 단어의 무게를 줄이도록','기준선을 높이도록']},
+ h:{dx:'틀린 질문의 주황 단어를 보세요.',sa:'주황색 단어 중 하나를 쓰면 돼요.',rx:'고칠 단어가 두 개예요. 비슷한 말 연결에 쉼표로 한꺼번에 쓸 수 있어요.'},
+ lesson:'처음 보는 단어는 계산에서 빠져요. 비슷한 말을 연결하면(단어 벡터의 아이디어) 고쳐져요. 예시 질문을 더하는 것도 데이터를 보강하는 좋은 처방이에요.'},
+{id:'p5',name:'순서몰라봇',age:'2단계 검색형 (TF-IDF)',cc:'“학생이 선생님을 찾아요”와 “선생님이 학생을 찾아요”에 똑같이 답해요.',
+ bot:{mode:'tfidf',rules:{},syn:{},stop:[],thr:0,docs:[
+  D('s2t','학생 → 선생님','선생님을 만나려면 교무실로 가세요.','학생 선생님 찾 교무실'),
+  D('t2s','선생님 → 학생','학생을 찾을 때는 교내 방송으로 불러요.','선생님 학생 찾 방송'),
+  D('lib','도서관','도서관은 본관 3층이에요.','도서관 본관 3층')]},
+ tests:[{q:'학생이 선생님을 찾아요',tk:['학생','선생님','찾'],exp:'s2t'},{q:'선생님이 학생을 찾아요',tk:['선생님','학생','찾'],exp:'t2s'},{q:'도서관 몇 층?',tk:['도서관','몇','층'],exp:'lib'}],
+ dx:'order',dxOpt:['order','unk','common','len'],
+ sa:{q:'두 질문은 단어 가방(빈도 벡터)으로 보면 어떤가요? 한 단어로.',a:['같다','같음','같아요','동일','똑같다']},
+ curable:false,cure:'refer',kw:['순서','RNN','어텐션','문맥','가방'],
+ why:{c:['단어 순서를 버리고 개수만 세서','처음 보는 단어라서','흔한 단어가 점수를 가져가서'],e:['순서를 읽는 모델(RNN·어텐션)에게 맡기도록','비슷한 말을 연결하도록','기준선을 높이도록']},
+ h:{dx:'두 질문에 들어 있는 단어를 나란히 비교해 보세요.',sa:'단어만 세면 두 질문은 어떤 관계일까요?',rx:'단어를 세는 방식으로는 순서를 담을 수 없어요. 이 병원 밖의 도움이 필요해요.'},
+ lesson:'단어를 세는 방식은 순서를 버려요. 두 질문의 벡터가 완전히 같으니 어떤 처방도 못 고쳐요. 순서를 읽는 RNN, 어텐션 전문의에게 보내야 해요.'},
+{id:'p6',name:'배봇',age:'3단계 뜻을 아는 검색형',cc:'“배가 아파서 급식을 못 먹겠어요”라고 했더니 급식 메뉴를 알려 줘요.',
+ bot:{mode:'tfidf',rules:{},syn:{밥:'급식',양호실:'보건실'},stop:[],thr:0,docs:[
+  D('meal','급식','오늘 급식 후식은 배와 사과예요.','오늘 급식 후식 배 사과'),
+  D('nurse','보건실','보건실은 1층이에요.','보건실 1층'),
+  D('lib','도서관','도서관은 본관 3층이에요.','도서관 본관 3층')]},
+ tests:[{q:'배가 아파서 급식을 못 먹겠어요',tk:['배','아프','급식','못','먹'],exp:'nurse'},{q:'후식 배 나와?',tk:['후식','배','나오'],exp:'meal'},{q:'급식 먹으러 가요',tk:['급식','먹','가'],exp:'meal'},{q:'양호실 어디야?',tk:['양호실','어디'],exp:'nurse'}],
+ dx:'ctx',dxOpt:['ctx','unk','order','common'],
+ sa:{q:'두 가지 뜻으로 쓰여 헷갈린 단어는?',a:['배']},
+ curable:false,cure:'refer',kw:['문맥','주변','어텐션','뜻','여러'],
+ why:{c:['한 단어가 여러 뜻인데 점이 하나뿐이라서','사전에 없는 단어라서','말 많은 문서가 유리해서'],e:['주변 단어로 뜻을 다시 정하는 어텐션에게 맡기도록','예시 질문을 더하도록','길이로 나눠 비교하도록']},
+ dxWhy:'질문의 ‘배’는 몸의 배인데, 급식 답변의 ‘배’(과일)와 같은 단어로 계산됐어요.',
+ h:{dx:'✗ 칸의 결과지 ③ ‘겹친 단어’를 보세요. 질문 속 ‘배’와 급식 답변의 ‘배’는 같은 뜻일까요?',rx:'억지로 고치면 다른 질문이 망가져요. 1부 Lv4에서 무엇이 필요하다고 했나요?'},
+ rx2:'전문의 의뢰 (불치) — 단어마다 점이 하나인 방식으로는 못 고쳐요',
+ lesson:'‘배’는 단어마다 점이 하나뿐이라 몸의 배와 과일 배를 구별하지 못해요. 보건실 답변에 이 질문을 억지로 붙이면 이번엔 “급식 먹으러 가요”가 보건실로 가요(부작용). 주변 단어를 보고 뜻을 다시 정하는 어텐션, 곧 이 병원 밖 전문의(LLM)의 몫이에요.'},
+{id:'p7',name:'허세봇',age:'2단계 검색형 (TF-IDF)',cc:'모르는 걸 물어도 자신 있게 아무 답이나 해요.',
+ bot:{mode:'tfidf',rules:{},syn:{},stop:[],thr:0,docs:[
+  D('meal','급식','급식 메뉴는 1층 게시판에 있어요.','급식 메뉴 1층 게시판'),
+  D('nurse','보건실','보건실은 1층 현관 옆이에요.','보건실 1층 현관'),
+  D('lib','도서관','도서관은 본관 3층이에요.','도서관 3층 본관'),
+  D('music','음악실','음악실은 별관 3층이에요.','음악실 3층 별관')]},
+ tests:[{q:'주차장은 1층이에요?',tk:['주차장','1층'],exp:null},{q:'수영장 3층에 있어?',tk:['수영장','3층'],exp:null},{q:'보건실 어디야?',tk:['보건실','어디'],exp:'nurse'},{q:'급식 메뉴 알려 줘',tk:['급식','메뉴','알려'],exp:'meal'},{q:'음악실 어디야?',tk:['음악실','어디'],exp:'music'}],
+ dx:'halluc',dxOpt:['halluc','unk','len','order'],
+ sa:{q:'“주차장은 1층이에요?”에서 챗봇이 붙잡은 단어는?',a:['1층']},
+ curable:true,cure:'thr',kw:['기준','점수','낮','모른','환각'],
+ why:{c:['겹치는 단어 하나만 있어도 가장 높은 답을 골라서','처음 보는 단어라서','말 많은 문서가 유리해서'],e:['점수가 낮으면 모른다고 답하도록','비슷한 말을 연결하도록','길이로 나눠 비교하도록']},
+ h:{dx:'학교에 없는 것을 물었는데도 답을 했어요.',sa:'“주차장은 1층이에요?”의 결과지에서 파란(사전에 있는) 단어를 보세요.',rx:'정상 질문의 점수와 엉뚱한 답의 점수를 결과지에서 비교해, 그 사이에 기준선을 그어 보세요.'},
+ lesson:'겹치는 단어 하나만 있어도 가장 높은 답을 내놓아요. 점수가 기준선보다 낮으면 “모르겠어요”라고 말하게 하면 환각이 줄어요. LLM에도 같은 문제가 있어요.'}];
+const PATIENTS=[...EASY,...['p2','p3','p6'].map(id=>PATIENTS0.find(p=>p.id===id))];
+const SCHOOL={name:'우리 학교 안내',slots:[['school','학교 이름','고우고'],['lunch','점심시간','12시 20분'],['lib','도서관 위치','본관 3층']],
+must:['meal','nurse'],
+ans:[
+ {id:'meal',t:'급식',tx:'급식 메뉴는 홈페이지 식단표에서 볼 수 있어요. 점심시간은 {lunch}부터예요.',d:'급식 메뉴 홈페이지 식단표 점심시간',kw:['급식','메뉴','식단표'],
+  A:['오늘 급식 뭐야?','오늘 급식 뭐'],B:['식단표 어디서 봐?','식단표 어디 보'],C:['오늘 밥 뭐 나와?','오늘 밥 뭐 나오']},
+ {id:'nurse',t:'보건실',tx:'몸이 안 좋으면 1층 보건실로 가세요. 담임 선생님께도 꼭 말씀드려요.',d:'몸 안좋 1층 보건실 담임 선생님 말씀',kw:['보건실','몸'],
+  A:['보건실 어디야?','보건실 어디'],B:['몸이 안 좋을 땐 어떻게 해?','몸 안좋 어떻게'],C:['양호실 어디예요?','양호실 어디']},
+ {id:'lib',t:'도서관',tx:'도서관은 {lib}에 있어요. 책은 한 번에 3권까지 2주 동안 빌릴 수 있어요.',d:'도서관 책 3권 권 2주 빌리',kw:['도서관','책'],
+  A:['도서관 어디 있어?','도서관 어디 있'],B:['책 몇 권 빌릴 수 있어?','책 몇 권 빌리'],C:['대출 기간이 얼마나 돼?','대출 기간 얼마나']},
+ {id:'time',t:'시간표',tx:'시간표는 학급 게시판과 학교 앱에 올라와요. 바뀐 시간표는 아침 조회 때 알려 줘요.',d:'시간표 학급 게시판 학교 앱 바뀐 시간표 아침 조회',kw:['시간표','조회'],
+  A:['시간표 어디서 봐?','시간표 어디 보'],B:['바뀐 거 있으면 언제 알려 줘?','바뀐 언제 알려'],C:['몇 교시에 무슨 수업이야?','교시 무슨 수업']},
+ {id:'exam',t:'시험',tx:'2학기 기말고사는 12월 둘째 주예요. 시험 범위는 과목별 공지를 확인하세요.',d:'2학기 기말고사 12월 둘째 주 시험 범위 과목 공지 확인',kw:['시험','기말고사'],
+  A:['시험 언제야?','시험 언제'],B:['과목별 범위 알려 줘','과목 범위 알려'],C:['평가 날짜 궁금해','평가 날짜 궁금']},
+ {id:'lost',t:'분실물',tx:'물건을 잃어버리면 1층 행정실 옆 분실물 보관함을 확인하세요.',d:'물건 잃어버리 1층 행정실 분실물 보관함 확인',kw:['분실물','보관함'],
+  A:['분실물 어디서 찾아?','분실물 어디 찾'],B:['물건 잃어버렸어','물건 잃어버리'],C:['지갑이 없어졌어요','지갑 없어지']},
+ {id:'wifi',t:'와이파이',tx:'학생용 와이파이 이름은 {school}_STUDENT예요. 비밀번호는 담임 선생님께 물어보세요.',d:'학생용 와이파이 이름 비밀번호 담임 선생님 물어보',kw:['와이파이','와이파이'],
+  A:['와이파이 비번 뭐야?','와이파이 비번 뭐'],B:['비밀번호 알려 줘','비밀번호 알려'],C:['인터넷 연결 어떻게 해?','인터넷 연결 어떻게']},
+ {id:'after',t:'방과후',tx:'방과후 강좌는 학기 초에 학교 앱으로 신청해요.',d:'방과후 강좌 학기 학교 앱 신청',kw:['방과후','강좌'],
+  A:['방과후 언제 신청해?','방과후 언제 신청'],B:['강좌 신청은 어디서 해?','강좌 신청 어디'],C:['오후 특강 듣고 싶어','오후 특강 듣']},
+ {id:'late',t:'등교',tx:'등교 시간은 8시 20분까지예요. 늦으면 교무실에 먼저 들러 주세요.',d:'등교 시간 8시 20분 늦 교무실 들르',kw:['등교','교무실'],
+  A:['등교 몇 시까지야?','등교 몇 시'],B:['늦으면 어떻게 해?','늦 어떻게'],C:['지각하면 어떡해?','지각 어떡']},
+ {id:'career',t:'진로 상담',tx:'진로 상담은 2층 진로상담실에서 해요. 담당 선생님께 미리 예약하세요.',d:'진로 상담 2층 진로상담실 담당 선생님 예약',kw:['진로','상담'],
+  A:['진로 상담 어디서 해?','진로 상담 어디'],B:['예약은 어떻게 해?','예약 어떻게'],C:['대학 고민 이야기할 곳 있어?','대학 고민 이야기 곳']}
+],
+D:['배가 너무 아파요','배 아프','nurse'],
+map:{급식:[16,20],메뉴:[27,16],식단표:[24,30],점심시간:[8,32],밥:[17,9],점심:[6,18],반찬:[34,24],배:[33,38],
+ 보건실:[76,20],몸:[82,26],양호실:[71,15],도서관:[44,9],책:[56,12],빌리:[48,22],대출:[59,25],
+ 시간표:[19,58],교시:[13,53],수업:[25,64],시험:[46,43],기말고사:[52,46],평가:[40,48],
+ 분실물:[78,50],물건:[90,56],잃어버리:[76,62],지갑:[95,47],없어지:[68,70],와이파이:[47,72],비밀번호:[55,77],인터넷:[42,77],
+ 방과후:[18,84],강좌:[25,89],특강:[12,89],등교:[78,82],늦:[85,87],지각:[90,82],진로:[58,90],상담:[66,93],대학:[53,95],고민:[71,97]}};
+/* ===== 상태 ===== */
+const LIM={choice:60,short:90,rx:180},SLOT={school:'고우고',lunch:'12시 20분',lib:'본관 3층'};
+const MAX_T=60,MAX_P=45,MAXALL=MAX_T+MAX_P*PATIENTS.length;
+let G;const fresh=()=>({doc:'',bot:'',phase:'intro',tl:1,kw:{},tq:{},tdone:{},pi:0,ps:{},t0:Date.now()});
+try{G=JSON.parse(localStorage.getItem('cbdoc')||'null')}catch(e){}
+if(!G||!G.phase)G=fresh();
+const save=()=>{try{localStorage.setItem('cbdoc',JSON.stringify(G))}catch(e){}};
+const BN=()=>G.bot.trim()||'고우봇',DN=()=>G.doc.trim()||'수련의';
+const total=()=>Object.entries(G.tq).filter(([k])=>/^t\d/.test(k)).reduce((a,[,q])=>a+(q.pts||0),0)+Object.values(G.ps).reduce((a,p)=>a+pPts(p),0);
+const pPts=p=>Math.max(0,(p.dx?.pts||0)+(p.rx?.pts||0)-Object.values(p.pen||{}).reduce((a,b)=>a+b,0));
+const stars=n=>n>=MAX_P*.85?3:n>=MAX_P*.55?2:1;
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),1400)}
+/* ===== 타이머 ===== */
+let tick=null;
+function timer(lim){G.t0=G.t0||Date.now();clearInterval(tick);const up=()=>{const el=$('#tm');if(!el){clearInterval(tick);return}const left=Math.max(0,lim-(Date.now()-G.t0)/1000);el.firstChild.style.width=(left/lim*100)+'%';el.classList.toggle('over',left<=0);const s=$('#tms');if(s)s.textContent=left>0?`여유 시간 안에 풀면 +5점 · ${Math.ceil(left)}초`:'시간 점수는 지났지만 계속 풀 수 있어요'};up();tick=setInterval(up,1000);
+  return'<div class="timer" id="tm"><i style="width:100%"></i></div><div class="note" id="tms" style="margin:-6px 0 8px"></div>'}
+const inTime=lim=>(Date.now()-G.t0)/1000<=lim;
+const startStage=()=>{G.t0=Date.now();save()};
+/* ===== 공통 화면 ===== */
+function frame(){const tot=4+PATIENTS.length+1,done=(G.phase==='intro'?0:G.phase==='train'?G.tl-1:G.phase==='ward'?4+G.pi:tot);
+  $('#pg').style.width=(done/tot*100)+'%';
+  $('#stl').textContent=G.phase==='intro'?'입학':G.phase==='train'?`1부 수련 · Lv${G.tl}`:G.phase==='ward'?`2부 진료 · ${G.pi+1} / ${PATIENTS.length}`:'수료';
+  $('#pts').innerHTML=G.phase==='intro'?'':`닥터 ${esc(DN())} · <b>${total()}</b>점`}
+function nav(prev,next,ok=true,fn){$('#bar').innerHTML=(prev?'<button class="circ" id="pv" aria-label="이전">‹</button>':'')+(next?`<button id="nx" ${ok?'':'disabled'}>${next}</button>`:'');if(prev)$('#pv').onclick=prev;if(next)$('#nx').onclick=fn}
+function render(){save();frame();scrollTo(0,0);({intro:Intro,train:Train,ward:Ward,license:License})[G.phase]()}
+/* 검사 결과(원리 보기) */
+const MODE={rule:'규칙형',count:'단어 세기',tf:'TF (길이로 나눔)',tfidf:'TF-IDF + 코사인'};
+function detail(r,bot,title,ex){
+  const T=r.trace,got=r.got?title(r.got):'잘 모르겠어요',expT=r.exp===null?'“잘 모르겠어요”라고 해야 해요':title(r.exp);
+  const step=(n,h,b)=>`<div class="st"><span class="sn">${n}</span><div><b>${h}</b>${b?`<div>${b}</div>`:''}</div></div>`;
+  const end=step('✓',bot.mode==='rule'?'결론':'점수가 가장 높은 답변을 보여 줘요',`${r.ok?'<span class="good">맞혔어요.</span>':'<span class="bad">틀렸어요.</span>'} 챗봇의 답: <b>${esc(got)}</b>${r.ok?'':` → 정답은 ${esc(expT)}`}`);
+  let h=`<div class="dq">“${esc(r.q)}”</div><div class="why0">${bot.mode==='rule'?'규칙형 챗봇은 질문에 <b>정해 둔 키워드</b>가 있으면 그 답변을 보여 줘요.':'검색형 챗봇은 가진 답변들 가운데 <b>질문과 가장 비슷한 답변</b>을 골라 보여 줘요. 그래서 질문의 단어가 각 답변에 얼마나 들어 있는지 따져 봐요.'}</div>`;
+  if(bot.mode==='rule'){
+    if(ex){const rl=bot.docs.map(d=>`${esc(d.t)}: ${(bot.rules[d.id]||[]).map(k=>`<span class="tok">${esc(k)}</span>`).join('')||'<span class="note">(없음)</span>'}`).join('<br>');
+      h+=step(1,'등록된 규칙 (키워드 → 답변)',rl)+step(2,'이 질문에 걸린 규칙',T.rk?`<span class="tok">${esc(T.rk)}</span> → ${esc(got)}`:'없음');return h+end}
+    h+=step(1,'정해 둔 규칙을 위에서부터 확인해요',T.rk?`질문에 <b>“${esc(T.rk)}”</b>가 들어 있어서 <b>${esc(got)}</b> 규칙이 걸렸어요.`:'질문에 규칙의 키워드가 하나도 없어요. 규칙형은 키워드가 없으면 대답을 못 해요.');
+    return h+end}
+  const map=T.map||[],known=map.filter(m=>m[1]==='k').map(m=>m[0]),unk=map.filter(m=>m[1]==='u').map(m=>m[0]),mp=map.filter(m=>m[1]==='m'),st=map.filter(m=>m[1]==='s').map(m=>m[0]);
+  h+=step(1,'질문을 단어로 나눠요',map.map(m=>`<span class="tok">${esc(m[0])}</span>`).join(''));
+  let b2='';
+  if(known.length)b2+=`<div>답변에 있는 단어: ${known.map(w=>`<span class="tok">${esc(w)}</span>`).join('')}</div>`;
+  if(mp.length)b2+=`<div>${mp.map(m=>`<span class="tok m">${esc(m[0])} → ${esc(m[2])}</span>`).join('')} 처음 보는 단어지만 뜻이 가까운 단어로 바꿔 읽었어요.</div>`;
+  if(unk.length)b2+=`<div>${unk.map(w=>`<span class="tok u">${esc(w)}</span>`).join('')} 답변에 한 번도 없는 단어라 <b>계산에서 빠져요.</b></div>`;
+  if(st.length)b2+=`<div>${st.map(w=>`<span class="tok s">${esc(w)}</span>`).join('')} 불용어로 빼 둔 단어예요.</div>`;
+  if(ex)b2=map.map(m=>m[1]==='m'?`<span class="tok m">${esc(m[0])} → ${esc(m[2])}</span>`:`<span class="tok ${m[1]==='u'?'u':m[1]==='s'?'s':''}">${esc(m[0])}</span>`).join('')+(unk.length||st.length?'<div class="note" style="margin-top:4px">줄 그은 단어는 계산에 쓰이지 않았어요.</div>':'');
+  h+=step(2,ex?'그중 답변들에 있는 단어만 비교에 써요':'그중 답변들에 있는 단어만 비교에 써요',b2);
+  if(!known.length&&!mp.length)return h+step(3,'점수를 매겨요',ex?'모든 답변 0점':'남은 단어가 하나도 없어서 모든 답변이 0점이에요. 그래서 “잘 모르겠어요”라고 해요.')+end;
+  const how=ex?`방식: <b>${MODE[bot.mode]}</b>`:{count:'질문 단어가 답변마다 몇 번 나오는지 <b>그냥 세요.</b> 말이 많은 답변일수록 유리해요.',tf:'센 횟수를 <b>답변의 단어 수로 나눠요(TF).</b> 그런데 흔한 단어도 똑같이 쳐 줘요.',tfidf:'드문 단어에 <b>무게를 더 주고(IDF)</b>, 질문과 답변의 <b>방향을 비교해요(코사인).</b>'}[bot.mode];
+  const zero=Object.entries(T.idf||{}).filter(([,v])=>v===0).map(([w])=>w);
+  const mx=Math.max(...T.sc.map(s=>s.s),1e-9);
+  const bars=T.sc.slice(0,3).map((s,i)=>`<div class="sb"><span>${esc(title(s.id))}${bot.mode!=='tfidf'?` <small>(${s.L}개)</small>`:''}</span><i><em style="width:${s.s/mx*100}%;${i?'':'background:var(--a)'}"></em></i><span>${bot.mode==='count'?s.s:s.s.toFixed(2)}</span></div>`).join('');
+  const qset=new Set([...known,...mp.map(m=>m[2])]),dw=id=>{const d=bot.docs.find(x=>x.id===id);return d?d.w.filter(w=>!bot.stop.includes(w)):[]},cnt=id=>[...qset].map(w=>[w,dw(id).filter(x=>x===w).length]).filter(x=>x[1]).map(([w,c])=>`${esc(w)}${c>1?'×'+c:''}`).join(' · ')||'없음';
+  const row=id=>{const w=dw(id);const tx=(bot.docs.find(x=>x.id===id)||{}).tx||'';return`<div class="dr"><b>${esc(title(id))}</b> <small>답변을 나눈 단어 ${w.length}개</small><div class="note" style="margin:2px 0 0;color:var(--ink)">“${esc(tx)}”</div><div>${w.map(x=>`<span class="tok ${qset.has(x)?'':'dim'}">${esc(x)}</span>`).join('')}</div></div>`};
+  const ov=`<div class="note" style="margin-top:6px">답변 속 단어 · 진한 칩 = 질문과 겹친 단어</div>${row(T.sc[0].id)}${r.exp&&r.exp!==T.sc[0].id?row(r.exp):''}`;
+  h+=step(3,'답변마다 질문과 얼마나 비슷한지 점수를 매겨요',`<div>질문 단어가 그 답변에 많이 들어 있을수록 점수가 높아요.</div>`+how+ov+(!ex&&zero.length&&bot.mode==='tfidf'?`<div>${zero.map(w=>`‘${esc(w)}’`).join(', ')}는 모든 답변에 있어서 무게가 0이에요.</div>`:'')+bars+(bot.thr?`<div>기준선 ${bot.thr}보다 낮으면 “잘 모르겠어요”라고 해요.</div>`:''));
+  return h+end}
+function tilesHtml(res,cls){return`<div class="tiles ${cls||''}">${res.map((r,i)=>`<button class="tile ${r.ok?'':'x'}" data-i="${i}"><span class="m">${r.ok?'✓':'✗'}</span><span class="qq">${esc(r.q)}</span></button>`).join('')}</div>`}
+function bindTiles(box,res,bot,title,detId,ex){box.querySelectorAll('.tile').forEach(b=>b.onclick=()=>{box.querySelectorAll('.tile').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#'+detId).innerHTML=detail(res[+b.dataset.i],bot,title,ex)})}
+/* 선택형 퀴즈 */
+function quiz(el,key,q,opts,pts,onDone,why){const st=G.tq[key];const order=opts.map((o,i)=>i).sort((a,b)=>((a*7+key.length)%5)-((b*7+key.length)%5));
+  el.innerHTML=`<h3>체크 문제 · ${pts}점</h3><p class="lead" style="color:var(--ink);font-weight:600">${q}</p>${st?'':timer(LIM.choice)}<div class="choice">${order.map(i=>`<button data-i="${i}" class="${st?(i===0?'ok':i===st.pick?'no':''):''}" ${st?'disabled':''}>${esc(opts[i])}</button>`).join('')}</div><div id="qfb"></div>`;
+  const fb=()=>{const s=G.tq[key];$('#qfb').innerHTML=`<div class="fb ${s.pick===0?'ok':'no'}"><b>${s.pick===0?'정답!':'아쉬워요.'} +${s.pts}점</b>정답: ${esc(opts[0])}${why?`<div style="margin-top:4px">${esc(why)}</div>`:''}</div>`};
+  if(st){fb();onDone();return}
+  el.insertAdjacentHTML('beforeend','<button id="qsub" style="margin-top:10px" disabled>제출하기</button>');let sel=null;
+  el.querySelectorAll('.choice button').forEach(b=>b.onclick=()=>{sel=+b.dataset.i;el.querySelectorAll('.choice button').forEach(x=>x.classList.toggle('sel',x===b));$('#qsub').disabled=false});
+  $('#qsub').onclick=()=>{if(sel===null)return;const i=sel;G.tq[key]={pick:i,pts:(i===0?pts:0)+(inTime(LIM.choice)?5:0)};save();frame();quiz(el,key,q,opts,pts,onDone,why);toast(i===0?'정답!':'오답')}}
+/* ===== 입학 ===== */
+function Intro(){
+  $('#main').innerHTML=`<div class="card"><div class="lv">입학</div><h2>챗봇 닥터 수련 과정</h2><p class="lead">챗봇이 왜 틀리는지 알아야 고칠 수 있어요. 수련을 마치면 아픈 챗봇들을 진료합니다.</p>
+  <label class="f">닥터 이름</label><input id="dn" value="${esc(G.doc)}" placeholder="예: 김OO">
+  <label class="f">내 챗봇 이름 (비워 두면 ‘고우봇’)</label><input id="bn" value="${esc(G.bot)}" placeholder="고우봇">
+  <table><tr><th>과정</th><th>내용</th><th class="n">배점</th></tr>
+  <tr><td>1부 수련</td><td>내 챗봇 Lv1 → Lv4 키우기 + 체크 문제 4개</td><td class="n">${MAX_T}</td></tr>
+  <tr><td>2부 진료</td><td>아픈 챗봇 ${PATIENTS.length}명 진단 · 처방</td><td class="n">${MAX_P*PATIENTS.length}</td></tr></table>
+  <p class="note">문항마다 여유 시간이 있어요. 그 안에 풀면 누구나 시간 점수 +5점, 빨리 푼다고 더 주지 않아요.</p></div>`;
+  $('#dn').oninput=e=>{G.doc=e.target.value;save()};$('#bn').oninput=e=>{G.bot=e.target.value;save()};
+  nav(null,'수련 시작 →',true,()=>{G.phase='train';G.tl=1;render()})}
+/* ===== 1부 수련 ===== */
+const TDOCS=()=>SCHOOL.ans.slice(0,8).map(a=>({id:a.id,t:a.t,tx:a.tx.replace(/\{(\w+)\}/g,(_,k)=>SLOT[k]),w:a.d.split(' ')}));
+const ttitle=id=>(SCHOOL.ans.find(a=>a.id===id)||{}).t+' 안내';
+function tsyn(){const V=new Set(TDOCS().flatMap(d=>d.w)),m=SCHOOL.map,o={};Object.keys(m).forEach(w=>{if(V.has(w))return;let best=null,bd=15;V.forEach(v=>{if(!m[v])return;const d=Math.hypot(m[w][0]-m[v][0],m[w][1]-m[v][1]);if(d<bd){bd=d;best=v}});if(best)o[w]=best});return o}
+function tbot(lv){return{mode:lv===1?'rule':'tfidf',docs:TDOCS(),rules:G.kw,syn:lv>=3?tsyn():{},stop:[],thr:0}}
+function ttests(){const ds=SCHOOL.ans.slice(0,8),n=ds.length,pick=(k,off)=>[0,1,2].map(i=>ds[(i*3+off)%n]).map(a=>({q:a[k][0],tk:a[k][1].split(' '),exp:a.id}));
+  return[...pick('A',0),...pick('B',1),...pick('C',2),{q:SCHOOL.D[0],tk:SCHOOL.D[1].split(' '),exp:SCHOOL.D[2],D:1}]}
+function mapSvg(res){const m=SCHOOL.map,V=new Set(TDOCS().flatMap(d=>d.w)),W=640,H=360,P=([x,y])=>[x/100*(W-70)+20,y/100*(H-36)+18];let ln='';
+  (res||[]).forEach(r=>(r.trace.map||[]).forEach(([w,k,n])=>{if(k==='m'&&m[w]&&m[n]){const a=P(m[w]),b=P(m[n]);ln+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${w==='배'?'#d4542b':'#2f5bea'}" stroke-width="2.5"/>`}}));
+  return`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;background:#f4f5f7;border-radius:10px">${ln}${Object.entries(m).map(([w,p])=>{const[x,y]=P(p),k=V.has(w),c=w==='배'?'#d4542b':k?'#2f5bea':'#9aa1ad';return`<circle cx="${x}" cy="${y}" r="${k?5.5:4}" fill="${c}"/><text x="${x+8}" y="${y+5}" font-size="${k?15:13}" font-weight="${k?700:400}" fill="${w==='배'?'#d4542b':k?'#141821':'#8a919d'}">${esc(w)}</text>`}).join('')}</svg>`}
+const TQ={1:['규칙형이 “오늘 밥 뭐 나와?”를 못 맞힌 까닭은? (그 칸을 눌러 보세요)',['규칙에 ‘밥’이라는 키워드가 없어서','답변이 너무 길어서','흔한 단어가 많아서','문장 순서가 달라서']],
+ 2:['✗ 칸을 눌러 ② 단계를 보세요. 주황색으로 지워진 단어는 어떤 단어일까요?',['내 답변들에 한 번도 나오지 않은 단어','모든 답변에 나오는 흔한 단어','질문에서 가장 긴 단어','조사와 어미']],
+ 3:['“오늘 밥 뭐 나와?” 칸의 ② 단계를 보세요. ‘밥’을 ‘급식’으로 바꿔 읽은 근거는?',['단어 지도에서 가장 가까운 단어라서','글자 수가 같아서','사전 순서가 가까워서','사람이 규칙으로 적어 두어서']],
+ 4:['“배가 너무 아파요”를 제대로 고치려면 무엇이 필요할까요?',['주변 단어를 보고 뜻을 다시 정하기 (어텐션)','단어 지도를 더 크게 그리기','규칙을 더 많이 쓰기','점수 기준선 높이기']]};
+const TL={1:['Lv1 규칙형','“이 단어가 있으면 이 답”','답변마다 키워드를 하나씩 탭해 규칙을 만들어요.'],2:['Lv2 검색형','규칙 대신 TF-IDF + 코사인','질문과 답변을 TF-IDF 벡터로 바꾸고 방향이 가장 비슷한 답을 골라요.'],3:['Lv3 뜻을 아는 검색형','비슷한 말은 가까이','처음 보는 단어를 단어 지도에서 가장 가까운 단어로 바꿔 읽어요.'],4:['Lv4 문맥','남은 한 문제','마지막 문제는 왜 아직 틀릴까요? 이건 Lv1~Lv3의 도구로는 못 고쳐요. 2부에서 이런 환자를 만나면 ‘전문의 의뢰’가 정답이에요.']};
+function Train(){const lv=G.tl,[tag,h,lead]=TL[lv],bot=tbot(lv),res=exam(bot,ttests()),n=res.filter(r=>r.ok).length,ds=TDOCS();
+  const ready=lv!==1||ds.every(d=>(G.kw[d.id]||[]).length),shown=lv===1?ready:G.tdone['run'+lv];
+  let top=`<div class="card"><div class="lv">${tag}</div><h2>${h}</h2><p class="lead">${lead}</p>`;
+  if(lv===1)top+=ds.map(d=>{const a=SCHOOL.ans.find(x=>x.id===d.id);return`<div class="kwr"><b>${a.t}</b><div class="pick" data-a="${a.id}">${[...new Set(a.kw)].map(k=>`<button class="opt" data-k="${k}" aria-pressed="${(G.kw[a.id]||[]).includes(k)}">${k}</button>`).join('')}</div></div>`}).join('');
+  if(lv===2||lv===3)top+=`${lv===3?mapSvg(shown?res:null):''}<button id="run" style="margin-top:8px" ${shown?'disabled':''}>${lv===2?'TF-IDF 켜기':'단어 벡터 켜기'}</button>`;
+  if(lv===4){const d=res.find(r=>r.D);top+=`<div class="cc">“${esc(d.q)}” → ${esc(d.got?ttitle(d.got):'모르겠어요')}</div>${mapSvg([d])}<p class="lead" style="margin-top:8px">‘배’는 지도에 점이 하나뿐이라 과일 동네에 있어요. 그래서 아픈 배도 급식 쪽으로 끌려가요.</p>`}
+  top+='</div>';
+  const resCard=lv===4?'':`<div class="card" id="res">${shown?`<div class="big pop">${n}<small> / 10 통과</small></div><p class="note">칸을 누르면 원리 보기: 토큰 → 사전 대조 → IDF → 점수</p>${tilesHtml(res,'t5')}<div class="det" id="tdet">칸을 눌러 보세요.</div>`:`<p class="lead" style="margin:0">${lv===1?`모든 답변에 키워드를 고르면 시험 10문제를 봐요. (${ds.filter(d=>(G.kw[d.id]||[]).length).length}/8)`:'위 버튼을 누르면 시험을 봐요.'}</p>`}</div>`;
+  const chat=lv===3&&shown?`<div class="card"><h3>${esc(BN())}에게 직접 물어보기</h3><div class="chat" id="chat"></div><form class="row" id="cf"><input id="cq" placeholder="예: 점심 메뉴 알려 줘"><button>보내기</button></form></div>`:'';
+  $('#main').innerHTML=top+resCard+chat+(shown||lv===4?'<div class="card" id="qz"></div>':'');
+  if(shown&&lv!==4)bindTiles($('#res'),res,bot,ttitle,'tdet');
+  if(lv===1)$('#main').querySelectorAll('[data-a]').forEach(p=>p.onclick=e=>{const b=e.target.closest('button');if(!b)return;const a=p.dataset.a,k=b.dataset.k,l=G.kw[a]||[];G.kw[a]=l.includes(k)?l.filter(x=>x!==k):[...l,k];const was=ready;save();if(!was&&ds.every(d=>(G.kw[d.id]||[]).length))startStage();Train();if(!was&&ds.every(d=>(G.kw[d.id]||[]).length))setTimeout(()=>$('#res').scrollIntoView({behavior:'smooth'}),60)});
+  if($('#run'))$('#run').onclick=()=>{G.tdone['run'+lv]=1;startStage();Train();setTimeout(()=>$('#res').scrollIntoView({behavior:'smooth'}),60)};
+  if($('#cf'))$('#cf').onsubmit=e=>{e.preventDefault();const q=$('#cq').value.trim();if(!q)return;$('#cq').value='';const keys=[...new Set(TDOCS().flatMap(d=>d.w)),...Object.keys(SCHOOL.map)],tk=tokenize(q).map(w=>keys.includes(w)?w:(keys.find(x=>w.startsWith(x))||w)),r=respond(bot,{q,tk}),d=TDOCS().find(x=>x.id===r.id);
+    $('#chat').insertAdjacentHTML('beforeend',`<div class="me">${esc(q)}</div><div class="bt">${d?esc(d.tx):'음… 그건 아직 잘 모르겠어요.'}</div>`);$('#chat').scrollTop=1e5};
+  const done=!!G.tq['t'+lv];
+  const next=()=>{G.tdone[lv]=1;if(lv<4){G.tl=lv+1;G.t0=null}else{G.phase='ward';G.pi=0}render()};
+  nav(lv>1?()=>{G.tl=lv-1;render()}:()=>{G.phase='intro';render()},lv<4?`Lv${lv+1}로 →`:'2부 진료 시작 →',done,next);
+  if(shown||lv===4){if(lv===4&&!G.t0)startStage();quiz($('#qz'),'t'+lv,TQ[lv][0],TQ[lv][1],10,()=>{const b=$('#nx');if(b)b.disabled=false})}}
+/* ===== 힌트 ===== */
+const FREE=3,TAG={rule:'Lv1',search:'Lv2',len:'Lv2',idf:'Lv2',stop:'Lv2',syn:'Lv3',ex:'데이터 보강',thr:'새 도구',refer:'Lv4'};
+function hintCard(p,s,stage){const H=(s.hint=s.hint||{})[stage]||{},left=Math.max(0,FREE-(G.hf||0));
+  const h2={rx:()=>p.rx2||('추천 도구: '+TOOLS[p.cure]),dx:()=>'정답이 아닌 것: '+p.dxOpt.filter(k=>k!==p.dx).slice(0,2).map(k=>DX[k]).join(' / '),sa:()=>`첫 글자 ‘${p.sa.a[0][0]}’, ${p.sa.a[0].length}글자`,rx:()=>'추천 도구: '+TOOLS[p.cure]}[stage]();
+  return`<div class="card" id="hc"><h3>지도 교수 힌트</h3>${H[1]?`<div class="fb" style="background:var(--y2);color:#6b4510;margin-top:0"><b>힌트 1</b>${esc(p.h[stage])}</div>`:''}${H[2]?`<div class="fb" style="background:var(--y2);color:#6b4510"><b>힌트 2</b>${esc(h2)}</div>`:''}
+  <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${H[1]?'':`<button class="ghost" data-h="1">힌트 1 · ${left?`무료 (남은 ${left}번)`:'−2점'}</button>`}${H[1]&&!H[2]?'<button class="ghost" data-h="2">힌트 2 · −5점</button>':''}</div></div>`}
+function bindHint(p,s,stage){const c=$('#hc');if(!c)return;c.onclick=e=>{const b=e.target.closest('[data-h]');if(!b)return;const k=+b.dataset.h,H=(s.hint[stage]=s.hint[stage]||{});s.pen=s.pen||{};
+  if(k===1){if((G.hf||0)<FREE)G.hf=(G.hf||0)+1;else s.pen[stage+'1']=2}else s.pen[stage+'2']=5;H[k]=1;save();frame();c.outerHTML=hintCard(p,s,stage);bindHint(p,s,stage)}}
+/* 환자 얼굴 */
+const AV=['#6c8cd5','#e2793b','#2e9e6b','#9b6cd5','#d9534f','#3aa3b8','#c98b2b'];
+function avatar(i,mood){const c=AV[i%AV.length],m=mood==='ok'?'M17 31q7 6 14 0':mood==='side'?'M17 31q7-3 14 2':'M17 33q7-6 14 0';
+  return`<svg width="56" height="56" viewBox="0 0 48 48" aria-hidden="true"><rect x="22.5" y="2" width="3" height="6" rx="1.5" fill="${c}"/><circle cx="24" cy="3" r="3" fill="${c}"/><rect x="5" y="8" width="38" height="34" rx="12" fill="${c}"/><rect x="10" y="13" width="28" height="24" rx="8" fill="#fff"/><circle cx="18" cy="23" r="3" fill="#1e2b4a"/><circle cx="30" cy="23" r="3" fill="#1e2b4a"/><path d="${m}" stroke="#1e2b4a" stroke-width="2.5" fill="none" stroke-linecap="round"/>${mood==='ok'?'':'<rect x="33" y="30" width="8" height="8" rx="2" fill="#fff" stroke="#d9534f" stroke-width="1.5"/><path d="M37 32v4M35 34h4" stroke="#d9534f" stroke-width="1.5"/>'}</svg>`}
+/* ===== 2부 진료 ===== */
+const OUTP={cure:25,better:15,side:5,none:0},OUTL={cure:'완치',better:'호전',side:'부작용',none:'변화 없음',refer:'전문의 의뢰'};
+function pst(p){return G.ps[p.id]||(G.ps[p.id]={stage:'chart'})}
+function Ward(){const p=PATIENTS[G.pi],s=pst(p),title=id=>(p.bot.docs.find(d=>d.id===id)||{}).t||'잘 모르겠어요',before=exam(p.bot,p.tests);
+  const STG=[['chart','증상'],['dx','진단'],['rx','처방'],['end','소견']],si=STG.findIndex(x=>x[0]===s.stage);
+  $('#main').innerHTML=`<div class="card"><div class="stage">${STG.map((x,i)=>`<span class="${i<si?'done':i===si?'on':''}">${x[1]}</span>`).join('')}</div>
+  <div class="pt">${avatar(G.pi,s.stage==='end'&&['cure','refer'].includes(s.rx?.best)?'ok':s.rx?.tries?.some(t=>t.out==='side')&&s.stage!=='end'?'side':'sick')}<div><span class="lv">환자 ${G.pi+1} / ${PATIENTS.length}</span><h2>${esc(p.name)}</h2><div class="note" style="margin:0">${esc(p.age)}</div></div></div><div class="cc">보호자 호소: ${esc(p.cc)}</div>
+  <details class="data" ${s.stage==='chart'?'open':''}><summary>이 챗봇이 가진 답변 데이터 (${p.bot.docs.length}개)</summary>${p.bot.docs.map(d=>`<div class="dd"><b>${esc(d.t)}</b>${p.bot.mode==='rule'?` <small>키워드: ${(p.bot.rules[d.id]||[]).join(', ')||'없음'}</small>`:` <small>단어 ${d.w.length}개</small>`}<div>${esc(d.tx)}</div></div>`).join('')}</details>
+  <p class="note" style="margin-top:10px">아래 질문 칸을 누르면 검사 결과지(원리 보기)가 나와요.</p>${tilesHtml(before,'t4')}<div class="det" id="pdet">✗ 칸을 눌러 검사해 보세요.</div></div><div class="card" id="stg"></div><div id="hw"></div>`;
+  bindTiles($('#main'),before,p.bot,title,'pdet',1);
+  const el=$('#stg'),go=st=>{s.stage=st;startStage();render()};
+  const answered={dx:!!G.tq['dx_'+p.id],rx:!!s.rx?.final}[s.stage];
+  if(['dx','rx'].includes(s.stage)&&!answered){$('#hw').innerHTML=hintCard(p,s,s.stage);bindHint(p,s,s.stage)}
+  if(s.stage==='chart'){el.innerHTML=`<h3>진료 시작</h3><p class="lead" style="margin:0">① 위의 답변 데이터를 읽고 ② ✗ 칸을 눌러 왜 틀렸는지 살펴본 뒤 진단해요. 진단 15점 · 처방 30점.</p><p class="note" style="margin-top:8px">모든 환자를 고칠 수 있지는 않아요. 이 병원의 도구(1부 Lv1~Lv3)로 안 고쳐지는 병은 <b>‘전문의 의뢰’가 정답</b>이에요.</p>`;
+    nav(G.pi>0?()=>{G.pi--;render()}:null,'진단하기 →',true,()=>go('dx'))}
+  else if(s.stage==='dx'){const opts=[p.dx,...p.dxOpt.filter(x=>x!==p.dx)].map(k=>DX[k]);
+    quiz(el,'dx_'+p.id,`${esc(p.name)}에게 무슨 일이 일어났을까요?`,opts,10,()=>{s.dx={pts:G.tq['dx_'+p.id].pts};save();const b=$('#nx');if(b)b.disabled=false;$('#hw').innerHTML=''},p.dxWhy);
+    const q=G.tq['dx_'+p.id];if(q){s.dx={pts:q.pts}}nav(null,'처방하기 →',!!q,()=>go('rx'))}
+  else if(s.stage==='rx')Rx(p,s,el,before,title);
+  else{const pts=pPts(s),stc=stars(pts),pen=Object.values(s.pen||{}).reduce((a,b)=>a+b,0);el.innerHTML=`<h3>진료 소견</h3><div style="font-size:26px;color:var(--y);letter-spacing:2px">${'★'.repeat(stc)}${'☆'.repeat(3-stc)}</div>
+    <table><tr><td>진단</td><td class="n">${s.dx?.pts||0} / 15</td></tr><tr><td>처방 (${OUTL[s.rx.best]}${s.rx.tries.length>1?', 재처방 −5':''})</td><td class="n">${s.rx.pts} / 30</td></tr>${pen?`<tr><td>힌트 사용</td><td class="n">−${pen}</td></tr>`:''}<tr><th>합계</th><th class="n">${pts} / ${MAX_P}</th></tr></table>
+    <div class="fb" style="background:var(--g2);color:#17603f"><b>정답 처방</b>${esc(p.rx2)}</div><div class="fb ok" style="background:var(--a2);color:var(--ink)"><b>지도 교수 한마디</b>${esc(p.lesson)}</div>`;
+    const last=G.pi===PATIENTS.length-1;nav(()=>{s.stage='rx';render()},last?'면허증 받기 →':'다음 환자 →',true,()=>{if(last){G.phase='license'}else{G.pi++;G.t0=null}render()})}}
+const RXTOOLS=['rule','search','len','idf','syn','ex','refer'];
+function chips(name,items){return`<div class="pick" data-g="${name}">${items.map(([v,l])=>`<button class="opt" data-v="${esc(v)}">${esc(l)}</button>`).join('')}</div>`}
+const pickv=n=>{const b=document.querySelector(`[data-g="${n}"] [aria-pressed=true]`);return b?b.dataset.v:null};
+function Rx(p,s,el,before,title){s.rx=s.rx||{tries:[]};const R=s.rx,done=R.final;
+  const FN=['뭐','어디','어디서','몇','알려','어떻게','나오','얼마나','시','층','못','가'],V=[...new Set(p.bot.docs.flatMap(d=>d.w))],unk=[...new Set(before.filter(r=>!r.ok).flatMap(r=>(r.trace.map||[]).filter(m=>m[1]==='u'&&!FN.includes(m[0])).map(m=>m[0])))],qw=[...new Set(p.tests.flatMap(t=>t.tk||tokenize(t.q)))];
+  const docs=p.bot.docs.map(d=>[d.id,d.t]);
+  const PARAM={rule:`<label class="f">어느 답변에</label>${chips('d',docs)}<label class="f">어떤 키워드로</label>${chips('w',qw.map(w=>[w,w]))}`,
+   syn:`<label class="f">처음 보는 말</label>${chips('a',(unk.length?unk:qw).map(w=>[w,w]))}<label class="f">→ 이렇게 읽기 (아는 말)</label>${chips('b',V.map(w=>[w,w]))}`,
+   ex:`<label class="f">어느 답변에</label>${chips('d',docs)}<label class="f">어떤 예시 질문을 붙일까</label>${chips('q',p.tests.map((t,i)=>[i,t.q]))}`};
+  const FBK={cure:'모든 질문을 맞혀요. 완치!',better:'일부는 고쳐졌지만 아직 ✗ 칸이 남았어요.',side:'고친 곳도 있지만, 멀쩡하던 질문이 새로 틀렸어요(빨간 칸). 칸을 눌러 이유를 보세요.',none:'증상이 그대로예요. 이 도구로는 원인이 안 바뀌어요.',refer:p.curable?'이 병원에서 고칠 수 있는 환자였어요.':'정확한 판정! 이 병원의 도구로는 못 고쳐요.'};
+  const tried=R.tries.map((t,i)=>`<div class="row2" style="margin-top:10px">${i+1}차 처방: <b>${esc(TOOLS[t.rx.tool])}</b> → <span class="out ${t.out}">${OUTL[t.out]}</span></div><div class="note" style="margin-top:2px">${FBK[t.out]}</div>${t.out!=='refer'?`<div data-try="${i}">${tilesHtml(t.res,'t4')}</div><div class="det" id="rdet${i}" style="display:none"></div>`:''}`).join('');
+  const bindTried=()=>R.tries.forEach((t,i)=>{const box=document.querySelector(`[data-try="${i}"]`);if(!box)return;const nb=applyRx(p.bot,t.rx);box.querySelectorAll('.tile').forEach(b=>b.onclick=()=>{box.querySelectorAll('.tile').forEach(x=>x.setAttribute('aria-pressed',x===b));const d=$('#rdet'+i);d.style.display='block';d.innerHTML=detail(exam(nb,p.tests)[+b.dataset.i],nb,title,1)})});
+  if(done){el.innerHTML=`<h3>처방 결과</h3>${tried}`;bindTried();nav(null,'소견 보기 →',true,()=>{s.stage='end';render()});return}
+  const canRetry=R.tries.length===1;
+  el.innerHTML=`<h3>처방 · 30점</h3>${tried}${R.tries.length?`<p class="lead" style="margin-top:10px">한 번 더 처방할 수 있어요 (−5점). 아니면 이대로 마쳐도 돼요.</p>`:timer(LIM.rx)}
+  <label class="f">치료 도구 고르기</label><div class="pick" id="tl">${RXTOOLS.map(k=>{const on=(p.bot.mode==='tfidf'&&['search','len','idf'].includes(k))||(p.bot.mode==='tf'&&k==='len');return`<button class="opt" data-k="${k}" ${on?'disabled title="이미 적용됨"':''}>${TOOLS[k]} <small style="opacity:.65;font-weight:500">${on?'이미 적용됨':TAG[k]}</small></button>`}).join('')}</div>
+  <div id="pp"></div><div class="row" style="display:flex;gap:8px;margin-top:12px" data-x="1"><button id="go" disabled>처방하고 재검사</button>${canRetry?'<button class="ghost" id="fin">이대로 마치기</button>':''}</div>`;
+  bindTried();$('#bar').innerHTML='';let tool=null;
+  el.onclick=e=>{const g=e.target.closest('[data-g] button');if(g){g.parentNode.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===g))}};
+  $('#tl').onclick=e=>{const b=e.target.closest('button');if(!b)return;tool=b.dataset.k;$('#tl').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#pp').innerHTML=PARAM[tool]||'';$('#go').disabled=false};
+  const finish=()=>{const best=R.tries.reduce((a,t)=>OUTP2(t.out,p)>OUTP2(a.out,p)?t:a,R.tries[0]);R.best=best.out;
+    R.pts=Math.max(0,OUTP2(best.out,p)-(R.tries.length>1?5:0)+(R.intime?5:0));R.final=1;save();frame();Ward()};
+  if($('#fin'))$('#fin').onclick=finish;
+  $('#go').onclick=()=>{let rx={tool};
+    if(tool==='rule'){const d=pickv('d'),w=pickv('w');if(!d||!w)return toast('답변과 키워드를 고르세요');rx={tool,doc:d,word:w}}
+    if(tool==='syn'){const a=pickv('a'),b=pickv('b');if(!a||!b)return toast('두 단어를 고르세요');rx={tool,pairs:[[a,b]]}}
+    if(tool==='ex'){const d=pickv('d'),q=pickv('q');if(!d||q===null)return toast('답변과 예시 질문을 고르세요');const t=p.tests[+q];rx={tool,doc:d,text:t.q,tk:t.tk}}
+    if(!R.tries.length)R.intime=inTime(LIM.rx);
+    let out,res=[];if(tool==='refer'){out='refer'}else{res=exam(applyRx(p.bot,rx),p.tests);out=outcome(before,res)}
+    R.tries.push({rx,out,res});save();toast(OUTL[out]);
+    if(out==='cure'||out==='refer'||R.tries.length>=2)finish();else Ward()}}
+function shuf(a){return a.map((_,i)=>i).sort((x,y)=>((x*5+a[0].length)%3)-((y*5+a[0].length)%3))}
+function OUTP2(out,p){if(out==='refer')return p.curable?0:25;return OUTP[out]||0}
+/* ===== 수료 ===== */
+function License(){const t=total(),pc=t/MAXALL,grade=pc>=.85?'전문의':pc>=.6?'레지던트':'인턴',tp=Object.entries(G.tq).filter(([k])=>/^t\d/.test(k)).reduce((a,[,q])=>a+q.pts,0);
+  $('#main').innerHTML=`<div class="lic"><div class="seal">고우봇<br>종합병원</div><div class="lv">챗봇 닥터 면허증</div><div class="nm">${esc(DN())}</div><h2>${grade}</h2><p class="lead">${t} / ${MAXALL}점 · 내 챗봇 ${esc(BN())}</p>
+  <table><tr><td>1부 수련</td><td></td><td class="n">${tp} / ${MAX_T}</td></tr>${PATIENTS.map(p=>{const s=G.ps[p.id]||{},n=pPts(s);return`<tr><td>${esc(p.name)}</td><td style="color:var(--y)">${s.stage==='end'?'★'.repeat(stars(n))+'☆'.repeat(3-stars(n)):'-'}${s.rx?` <span class="note">${OUTL[s.rx.best]||''}</span>`:''}</td><td class="n">${n} / ${MAX_P}</td></tr>`}).join('')}</table>
+  <p class="note">전문의 85% 이상 · 레지던트 60% 이상 · 인턴</p></div>`;
+  nav(()=>{G.phase='ward';G.pi=PATIENTS.length-1;render()},'처음부터 다시',true,()=>{G=fresh();render()})}
+render();
+}
+</script>
+</body>
+</html>
